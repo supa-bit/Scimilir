@@ -123,9 +123,9 @@ Open Windows **Settings → Apps → Installed apps**, find **Scimilir**, press
   `start.bat` (or run `dotnet run --project Scimilir`). It uses the same data
   folder as the installed app, so quit one before starting the other.
 - The installer: `.github/workflows/installer.yml` builds it on GitHub for
-  every change to `main` (find it under the **Actions** tab → the run →
-  **Artifacts**). To put a new version on the Releases page, raise
-  `<Version>` in `Scimilir/Scimilir.csproj` and push a tag like `v0.3.0`.
+  every change to `main` and puts it on the Releases page as the version in
+  `<Version>` in `Scimilir/Scimilir.csproj`. Raise that number for a new
+  version; otherwise the current version's installer is refreshed.
   The installer itself is made by [Inno Setup](https://jrsoftware.org/isinfo.php)
   from `installer/Scimilir.iss`.
 - `Scimilir/`: the program. `Program.cs` starts it, `Api.cs` holds the web

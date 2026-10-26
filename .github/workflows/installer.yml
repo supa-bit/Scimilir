@@ -1,12 +1,11 @@
-# Builds Scimilir-Setup.exe on a Windows computer at GitHub.
-# - Every push to main: the installer is attached to the run (Actions tab → the run → Artifacts).
-# - A version tag like v0.2.0: the installer is also put on the Releases page for download.
+# Builds Scimilir-Setup.exe on a Windows computer at GitHub, and puts it on the
+# Releases page as version v<Version> (the <Version> in Scimilir/Scimilir.csproj).
+# Raising <Version> makes a new release; otherwise the current one is refreshed.
 name: Windows installer
 
 on:
   push:
     branches: [main]
-    tags: ["v*"]
   workflow_dispatch:
 
 permissions:
@@ -53,9 +52,13 @@ jobs:
           path: installer-output/*.exe
 
       - name: Put the installer on the Releases page
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: v${{ env.VERSION }}
+          name: Scimilir ${{ env.VERSION }}
+          target_commitish: ${{ github.sha }}
+          make_latest: true
           files: installer-output/*.exe
           body: |
             **To install:** download `Scimilir-Setup-${{ env.VERSION }}.exe` below and run it.
