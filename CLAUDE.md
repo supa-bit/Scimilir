@@ -24,7 +24,20 @@ offline).
   `ModelDownloads` (Hugging Face search and download).
 - `Scimilir/Storage/`: settings, password hashing, chat files.
 - `Scimilir/wwwroot/`: the page (`app.js`, `markdown.js`, `app.css`).
-- User data lives in `Scimilir/data/` (git-ignored).
+- `Scimilir/TrayIcon.cs`: the icon by the clock; only in the Windows app.
+- `installer/Scimilir.iss` + `.github/workflows/installer.yml`: the Windows
+  installer (Inno Setup), built on GitHub; a `v*` tag puts it on Releases.
+- User data lives in `%LOCALAPPDATA%\Scimilir` (`Startup.DefaultDataFolder`),
+  never next to the program.
+
+## The Windows app
+
+The owner installs Scimilir with `Scimilir-Setup-<version>.exe` from the
+Releases page; that is how they use it. It is built with
+`dotnet publish Scimilir -c Release -r win-x64 --self-contained -p:WindowsApp=true`,
+which targets `net10.0-windows`, has no console window (WinExe), shows the
+tray icon, and logs to `scimilir.log` in the data folder. To release: raise
+`<Version>` in `Scimilir.csproj`, push, then push a tag `v<version>`.
 
 ## Rules
 

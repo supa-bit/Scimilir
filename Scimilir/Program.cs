@@ -1,6 +1,5 @@
 // Scimilir: chat with AI models running on this PC, or in the cloud through
 // OpenRouter, from this PC's browser or a phone on the same Wi-Fi.
-using System.Diagnostics;
 using System.Reflection;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -9,13 +8,36 @@ using Scimilir;
 using Scimilir.Providers;
 using Scimilir.Storage;
 
-var builder = WebApplication.CreateBuilder(args);
+// "--background" (used when Scimilir starts with Windows) means: don't open the browser.
+var background = args.Contains("--background");
+args = [.. args.Where(a => a != "--background")];
 
-// The data folder sits next to the program unless "--DataFolder <path>" says otherwise.
-var paths = new AppPaths(builder.Configuration["DataFolder"] ?? Path.Combine(builder.Environment.ContentRootPath, "data"));
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+#if WINDOWS_APP
+    // The installed app finds its page files next to Scimilir.exe, wherever it was started from.
+    ContentRootPath = AppContext.BaseDirectory,
+#endif
+});
+
+// Settings, chats and models live in the user's app-data folder unless "--DataFolder <path>" says otherwise.
+var paths = new AppPaths(builder.Configuration["DataFolder"] ?? Startup.DefaultDataFolder());
 var settings = new SettingsStore(paths);
 var port = builder.Configuration.GetValue<int?>("Port") ?? settings.Current.Port;
 var version = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0";
+var localUrl = $"http://localhost:{port}";
+
+// Started twice? Just show the one that's already running.
+if (builder.Configuration["DataFolder"] is null && Startup.AlreadyRunning(port))
+{
+    if (!background) Browser.Open(localUrl);
+    return;
+}
+
+#if WINDOWS_APP
+builder.Logging.AddProvider(new FileLoggerProvider(Path.Combine(paths.Data, "scimilir.log")));
+#endif
 
 // 0.0.0.0 means "answer on every network", which is what lets a phone connect.
 builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
@@ -83,22 +105,20 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapScimilirApi();
 
+var firstRun = settings.Current.PasswordHash is null;
 app.Lifetime.ApplicationStarted.Register(() =>
 {
-    var local = $"http://localhost:{port}";
     Console.WriteLine();
     Console.WriteLine($"  Scimilir {version} is running.");
-    Console.WriteLine($"  On this PC:     {local}");
+    Console.WriteLine($"  On this PC:     {localUrl}");
     foreach (var url in Network.LanUrls(port))
         Console.WriteLine($"  On your phone:  {url}   (phone must be on the same Wi-Fi)");
     Console.WriteLine($"  Files are kept in {paths.Data}");
-    Console.WriteLine("  Keep this window open while you use Scimilir; close it to stop.");
     Console.WriteLine();
-    if (OperatingSystem.IsWindows() && settings.Current.OpenBrowserOnStart)
-    {
-        try { Process.Start(new ProcessStartInfo(local) { UseShellExecute = true }); }
-        catch (Exception) { /* No browser to open; the address is printed above. */ }
-    }
+#if WINDOWS_APP
+    TrayIcon.Start(localUrl, app.Lifetime, firstRunTip: firstRun);
+#endif
+    if (!background && settings.Current.OpenBrowserOnStart) Browser.Open(localUrl);
 });
 
 try
@@ -108,8 +128,12 @@ try
 catch (IOException ex) when (ex.InnerException is System.Net.Sockets.SocketException
                              || ex.Message.Contains("address already in use", StringComparison.OrdinalIgnoreCase))
 {
-    Console.Error.WriteLine($"\n  Port {port} is already in use. Is Scimilir already running in another window?");
-    Console.Error.WriteLine("  Close that window, or change \"Port\" in data/settings.json.\n");
+    var message = $"Scimilir couldn't start: another program is using network port {port}.\n\n" +
+                  $"To use a different port, change \"Port\" in {paths.SettingsFile}.";
+#if WINDOWS_APP
+    TrayIcon.ShowError(message);
+#endif
+    Console.Error.WriteLine("\n  " + message + "\n");
     Environment.ExitCode = 1;
 }
 

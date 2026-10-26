@@ -4,8 +4,26 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
+    <ApplicationIcon>icon.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <!-- The Windows app (built with -p:WindowsApp=true, see installer/README.md):
+       no black window, an icon by the clock instead. -->
+  <PropertyGroup Condition="'$(WindowsApp)' == 'true'">
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <OutputType>WinExe</OutputType>
+    <UseWindowsForms>true</UseWindowsForms>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <DefineConstants>$(DefineConstants);WINDOWS_APP</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(WindowsApp)' != 'true'">
+    <Compile Remove="TrayIcon.cs" />
+  </ItemGroup>
+  <!-- The engine packages carry files for Linux too; a Windows build doesn't need them. -->
+  <Target Name="DropOtherSystems" AfterTargets="Publish" Condition="'$(RuntimeIdentifier)' == 'win-x64'">
+    <RemoveDir Directories="$(PublishDir)runtimes/linux-x64;$(PublishDir)runtimes/linux-arm64;$(PublishDir)runtimes/osx-x64;$(PublishDir)runtimes/osx-arm64" />
+  </Target>
 
   <ItemGroup>
     <!-- LLamaSharp runs model files (.gguf) on this PC. The Cpu backend works
@@ -18,7 +36,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- The data folder holds settings, chats and model files; never build it in. -->
+    <!-- The tray icon reads this file at run time. -->
+    <Content Include="icon.ico" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <!-- Older versions kept data here; never build it in. -->
     <Content Remove="data/**" />
     <None Remove="data/**" />
   </ItemGroup>

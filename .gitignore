@@ -6,6 +6,8 @@ obj/
 .vscode/*
 !.vscode/extensions.json
 TestResults/
+publish/
+installer-output/
 
 # Your own data: settings (with your password hash and cloud key), chats and
 # downloaded models. Never upload these.

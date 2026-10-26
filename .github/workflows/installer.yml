@@ -1,0 +1,67 @@
+# Builds Scimilir-Setup.exe on a Windows computer at GitHub.
+# - Every push to main: the installer is attached to the run (Actions tab → the run → Artifacts).
+# - A version tag like v0.2.0: the installer is also put on the Releases page for download.
+name: Windows installer
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  installer:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Run the tests
+        run: dotnet test
+
+      - name: Build the Windows app
+        run: dotnet publish Scimilir -c Release -r win-x64 --self-contained -p:WindowsApp=true -o publish
+
+      - name: Check the app is complete
+        shell: pwsh
+        run: |
+          foreach ($f in "Scimilir.exe", "icon.ico", "wwwroot\index.html", "runtimes\win-x64\native\vulkan\llama.dll", "runtimes\win-x64\native\avx2\llama.dll") {
+            if (-not (Test-Path "publish\$f")) { throw "Missing from the app: $f" }
+          }
+
+      - name: Build the installer
+        shell: pwsh
+        run: |
+          $version = (dotnet msbuild Scimilir/Scimilir.csproj -getProperty:Version).Trim()
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+            choco install innosetup -y --no-progress
+          }
+          & $iscc "/DAppVersion=$version" installer\Scimilir.iss
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed" }
+          "VERSION=$version" >> $env:GITHUB_ENV
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Scimilir-Setup-${{ env.VERSION }}
+          path: installer-output/*.exe
+
+      - name: Put the installer on the Releases page
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: installer-output/*.exe
+          body: |
+            **To install:** download `Scimilir-Setup-${{ env.VERSION }}.exe` below and run it.
+
+            Windows may warn that it "protected your PC", because this installer isn't signed by a
+            known company. Press **More info**, then **Run anyway**.
+
+            Already have Scimilir? Running the new installer updates it; your chats, settings and
+            models are kept.

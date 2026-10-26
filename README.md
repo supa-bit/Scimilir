@@ -12,23 +12,26 @@ Chat with AI models from your PC's browser, or from your phone on the same Wi-Fi
 - **One set of chats** shared by your PC and phone, saved on the PC.
 - **A password**, so only you can use it.
 
-## First start (Windows)
+## Install (Windows)
 
-1. **Get the files.** In GitHub Desktop: *File → Clone repository*, pick
-   `supa-bit/Scimilir`, and choose where to put it.
-2. **Install .NET 10 SDK** (once). Go to
-   <https://dotnet.microsoft.com/download/dotnet/10.0>, and under *SDK*
-   download the **Windows x64** installer and run it. (Godot may have
-   installed an older .NET already; Scimilir needs version 10.)
-   If you skip this step, `start.bat` will notice and open that page for you.
-3. **Start Scimilir.** Open the Scimilir folder in File Explorer and
-   double-click **`start.bat`**. A black window opens; the first start takes a
-   minute or two while it builds. Keep this window open while you use
-   Scimilir. Closing it stops Scimilir.
-4. **Allow it on your network.** Windows asks whether to let it communicate on
-   networks: tick **Private networks** and press *Allow*. (This is what lets
-   your phone connect.)
-5. Your browser opens at <http://localhost:5080>. **Choose a password.**
+1. Go to the **Releases** page: <https://github.com/supa-bit/scimilir/releases>
+   (you need to be logged in to GitHub, as the project is private).
+2. Under the newest version, press **Scimilir-Setup-….exe** to download it.
+3. Open the downloaded file. If Windows says it **protected your PC**, press
+   **More info**, then **Run anyway**. (It says this about any program that
+   isn't signed by a known company.)
+4. Tick any extras you want (a desktop icon, or starting with Windows so your
+   phone can always reach it) and press **Install**. It doesn't need
+   administrator rights or anything else installed.
+5. Scimilir opens in your browser. **Choose a password.**
+6. Windows asks whether to let Scimilir communicate on networks: tick
+   **Private networks** and press **Allow**. (This is what lets your phone
+   connect.)
+
+**Using it after that:** open **Scimilir** from the Start menu. While it runs,
+its icon sits by the clock (press the small **^** arrow if you can't see
+it). **Click** the icon to open Scimilir in your browser; **right-click** it
+and choose **Quit Scimilir** to stop it.
 
 ## Get a model for your PC
 
@@ -63,7 +66,7 @@ The PC must be on, with Scimilir running, for the phone to use it.
 
 If the phone can't connect: in Windows, search the Start menu for "Allow an
 app through Windows Firewall", press *Change settings*, and tick **Private**
-next to "dotnet" or "Scimilir". Also make sure your Wi-Fi is set as a
+next to "Scimilir". Also make sure your Wi-Fi is set as a
 *Private* network (*Settings → Network & internet → Wi-Fi → your network*).
 
 ## Cloud models (OpenRouter)
@@ -79,7 +82,9 @@ message. OpenRouter's website shows what you've spent.
 
 ## Where your things are kept
 
-Everything lives in the `Scimilir/data` folder:
+Everything you make is kept in your own app-data folder, separate from the
+program, so updating or removing Scimilir never touches it. To open it, press
+**Windows key + R**, type `%LOCALAPPDATA%\Scimilir` and press Enter. Inside:
 
 - `settings.json`: your settings (the password is saved only as a scrambled
   "hash", never as itself; the OpenRouter key is saved as is, so keep this
@@ -87,15 +92,21 @@ Everything lives in the `Scimilir/data` folder:
 - `chats/`: one file per chat
 - `models/`: downloaded model files (these are big: delete them in
   *Settings → On this PC* when you don't need them)
+- `scimilir.log`: what Scimilir did last time it ran, handy if something
+  goes wrong
 
-This folder is never uploaded to GitHub (the `.gitignore` file makes sure of
-that). To back up your chats, copy the `data/chats` folder somewhere safe.
+To back up your chats, copy the `chats` folder somewhere safe.
 
 ## Updating
 
-When there's a new version: close the Scimilir window, press **Fetch
-origin**, then **Pull** in GitHub Desktop, and double-click `start.bat`
-again.
+Download the newest installer from the Releases page and run it. It replaces
+the old version and keeps your chats, settings and models.
+
+## Removing Scimilir
+
+Open Windows **Settings → Apps → Installed apps**, find **Scimilir**, press
+**…** and **Uninstall**. Your chats and models stay in
+`%LOCALAPPDATA%\Scimilir`; delete that folder too if you want them gone.
 
 ## Good to know
 
@@ -108,6 +119,15 @@ again.
 
 ## For developers
 
+- Run from the source code: install the .NET 10 SDK, then double-click
+  `start.bat` (or run `dotnet run --project Scimilir`). It uses the same data
+  folder as the installed app, so quit one before starting the other.
+- The installer: `.github/workflows/installer.yml` builds it on GitHub for
+  every change to `main` (find it under the **Actions** tab → the run →
+  **Artifacts**). To put a new version on the Releases page, raise
+  `<Version>` in `Scimilir/Scimilir.csproj` and push a tag like `v0.3.0`.
+  The installer itself is made by [Inno Setup](https://jrsoftware.org/isinfo.php)
+  from `installer/Scimilir.iss`.
 - `Scimilir/`: the program. `Program.cs` starts it, `Api.cs` holds the web
   addresses the page uses, `Providers/` talks to models (on this PC through
   LLamaSharp, in the cloud through OpenRouter, and downloads from Hugging
