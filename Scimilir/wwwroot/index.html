@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="theme-color" content="#f6f4ef" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#16171a" media="(prefers-color-scheme: dark)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Scimilir</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <!-- Login / first-time setup -->
+  <section id="gate" class="gate" hidden>
+    <form id="gate-form" class="gate-card">
+      <img src="icon.svg" alt="" class="gate-logo">
+      <h1>Scimilir</h1>
+      <p id="gate-text"></p>
+      <input id="gate-password" type="password" autocomplete="current-password" placeholder="Password" required>
+      <input id="gate-password2" type="password" autocomplete="new-password" placeholder="Type it again" hidden>
+      <button id="gate-button" class="primary" type="submit">Log in</button>
+      <p id="gate-error" class="error" role="alert"></p>
+    </form>
+  </section>
+
+  <!-- The app -->
+  <div id="app" class="app" hidden>
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-head">
+        <div class="brand"><img src="icon.svg" alt=""> Scimilir</div>
+        <button id="new-chat" class="icon-button" title="New chat" aria-label="New chat">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+      </div>
+      <nav id="chat-list" class="chat-list" aria-label="Chats"></nav>
+      <div class="sidebar-foot">
+        <button id="open-settings" class="ghost wide">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+          Settings
+        </button>
+      </div>
+    </aside>
+    <div id="scrim" class="scrim" hidden></div>
+
+    <main class="main">
+      <header class="topbar">
+        <button id="open-sidebar" class="icon-button only-narrow" title="Chats" aria-label="Show chats">
+          <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+        <button id="model-button" class="model-button" aria-haspopup="dialog">
+          <span id="model-name">Pick a model</span>
+          <svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <span class="spacer"></span>
+        <button id="new-chat-top" class="icon-button only-narrow" title="New chat" aria-label="New chat">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+      </header>
+
+      <div id="messages" class="messages" aria-live="polite"></div>
+
+      <form id="composer" class="composer">
+        <div class="composer-box">
+          <textarea id="input" rows="1" placeholder="Message Scimilir" enterkeyhint="send"></textarea>
+          <button id="send" class="send" type="submit" title="Send" aria-label="Send">
+            <svg class="when-idle" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+            <svg class="when-busy" viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="1.5"/></svg>
+          </button>
+        </div>
+      </form>
+    </main>
+  </div>
+
+  <!-- Model picker -->
+  <dialog id="model-dialog" class="sheet">
+    <div class="sheet-head">
+      <input id="model-search" type="search" placeholder="Search models" autocomplete="off">
+      <button class="icon-button" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+    <div id="model-list" class="model-list"></div>
+  </dialog>
+
+  <!-- Settings -->
+  <dialog id="settings-dialog" class="sheet settings">
+    <div class="sheet-head">
+      <h2>Settings</h2>
+      <button class="icon-button" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+    <div class="tabs" role="tablist">
+      <button role="tab" data-tab="general" aria-selected="true">General</button>
+      <button role="tab" data-tab="local">On this PC</button>
+      <button role="tab" data-tab="cloud">Cloud</button>
+      <button role="tab" data-tab="phone">Phone</button>
+      <button role="tab" data-tab="account">Password</button>
+    </div>
+
+    <div class="tab-body" data-panel="general">
+      <label class="field">
+        <span>Instructions for every chat <small>(optional, sometimes called a “system prompt”)</small></span>
+        <textarea id="set-system" rows="4" placeholder="For example: Answer briefly. I'm in the UK."></textarea>
+      </label>
+      <label class="field">
+        <span>Creativity <output id="set-temp-out"></output></span>
+        <input id="set-temp" type="range" min="0" max="2" step="0.05">
+        <small>Lower is more focused and predictable; higher is more varied. 0.7 suits most chats.</small>
+      </label>
+      <label class="check"><input id="set-browser" type="checkbox"> Open the browser when Scimilir starts</label>
+      <div class="row-end"><button class="primary" id="save-general">Save</button></div>
+    </div>
+
+    <div class="tab-body" data-panel="local" hidden>
+      <div id="local-status" class="note"></div>
+
+      <h3>Your models</h3>
+      <div id="local-models" class="list"></div>
+
+      <div id="download-list" class="list"></div>
+
+      <h3>Get a model</h3>
+      <p class="hint">Models come from Hugging Face, a free library. Try one of these to start, or search.
+        Pick a file whose size fits in your graphics card's memory, with room to spare;
+        files marked <b>Q4_K_M</b> are a good balance of quality and size.</p>
+      <div class="chips" id="starter-chips"></div>
+      <form id="hf-search-form" class="inline-form">
+        <input id="hf-search" type="search" placeholder="Search Hugging Face, e.g. qwen3, llama, gemma">
+        <button class="secondary" type="submit">Search</button>
+      </form>
+      <div id="hf-results" class="list"></div>
+
+      <details class="advanced">
+        <summary>Advanced</summary>
+        <label class="field">
+          <span>Memory (context size), in tokens</span>
+          <input id="set-context" type="number" min="512" max="262144" step="512">
+          <small>How much of the chat the model keeps in mind. A token is about ¾ of a word. More uses more memory.</small>
+        </label>
+        <label class="field">
+          <span>Longest reply, in tokens</span>
+          <input id="set-maxreply" type="number" min="16" max="65536" step="16">
+        </label>
+        <label class="field">
+          <span>GPU layers</span>
+          <input id="set-gpu" type="number" min="0" max="999">
+          <small>How much of the model goes on the graphics card. 999 = all of it (fastest). 0 = processor only.
+            If a model is too big for your card, try a lower number like 20.</small>
+        </label>
+        <div class="row-end"><button class="primary" id="save-local">Save</button></div>
+      </details>
+    </div>
+
+    <div class="tab-body" data-panel="cloud" hidden>
+      <p class="hint">OpenRouter gives you hundreds of cloud models (Claude, GPT, Gemini, Llama and more) with one account.
+        Your messages go over the internet to the company that runs the model, and most models cost a little per message.</p>
+      <ol class="steps">
+        <li>Make an account at <a href="https://openrouter.ai" target="_blank" rel="noopener">openrouter.ai</a> and add some credit (some models are free).</li>
+        <li>Go to <a href="https://openrouter.ai/keys" target="_blank" rel="noopener">openrouter.ai/keys</a>, press <b>Create Key</b> and copy it.</li>
+        <li>Paste it below and press Save.</li>
+      </ol>
+      <p id="key-state" class="note"></p>
+      <label class="field">
+        <span>OpenRouter key</span>
+        <input id="set-key" type="password" autocomplete="off" placeholder="sk-or-…">
+      </label>
+      <div class="row-end">
+        <button class="secondary" id="remove-key">Remove key</button>
+        <button class="primary" id="save-key">Save</button>
+      </div>
+    </div>
+
+    <div class="tab-body" data-panel="phone" hidden>
+      <ol class="steps">
+        <li>Connect your phone to the same Wi-Fi as this PC.</li>
+        <li>Scan the code with your phone's camera, or type the address into its browser.</li>
+        <li>Log in with your Scimilir password.</li>
+      </ol>
+      <div id="phone-links"></div>
+      <p class="hint">Doesn't load? The first time Scimilir starts, Windows asks whether to allow it on networks:
+        tick <b>Private networks</b>. If you missed it, search the Start menu for “Allow an app through Windows Firewall”
+        and tick <b>Private</b> next to “dotnet” or “Scimilir”. Your Wi-Fi should also be set as a <b>Private</b> network in Windows.</p>
+      <p class="hint">Tip: in your phone browser's menu, choose “Add to Home screen” to open Scimilir like an app.</p>
+    </div>
+
+    <div class="tab-body" data-panel="account" hidden>
+      <form id="password-form">
+        <label class="field"><span>Current password</span><input id="pw-current" type="password" autocomplete="current-password" required></label>
+        <label class="field"><span>New password</span><input id="pw-next" type="password" autocomplete="new-password" required></label>
+        <p class="hint">Changing it logs out every other phone and browser.</p>
+        <div class="row-end"><button class="primary" type="submit">Change password</button></div>
+      </form>
+      <hr>
+      <div class="row-end"><button class="secondary" id="logout">Log out on this device</button></div>
+    </div>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" hidden></div>
+
+  <script src="markdown.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

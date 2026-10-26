@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Scimilir.Tests/Scimilir.Tests.csproj" />
+  <Project Path="Scimilir/Scimilir.csproj" />
+</Solution>
